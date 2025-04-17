@@ -1,9 +1,8 @@
 import 'package:chat/constants.dart';
 import 'package:chat/cubits/cubit.dart';
-// import 'package:chat/cubits/cubit.dart';
 import 'package:chat/helper/show_dialog.dart';
 import 'package:chat/models/user.dart';
-import 'package:chat/pages/chat.dart';
+import 'package:chat/pages/main_page.dart';
 import 'package:chat/widgets/custom_button.dart';
 import 'package:chat/widgets/custom_textfield.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -99,7 +98,7 @@ class RegisterPageState extends State<RegisterPage> {
                         if (value!.isEmpty) {
                           return 'Please enter your phone';
                         } else if (value.length < 11) {
-                          return 'Name must be 11 numbers';
+                          return 'Phone must be 11 numbers';
                         }
                         return null;
                       },
@@ -110,11 +109,11 @@ class RegisterPageState extends State<RegisterPage> {
                       controller: emailController,
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return 'Please enter email';
+                          return 'Please enter your email';
                         } else if (!RegExp(
-                                r'^[a-zA-Z0-9]+@[a-zA-Z]+\.[a-zA-Z]+')
+                                r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
                             .hasMatch(value)) {
-                          return 'Enter a valid email';
+                          return 'Email must contain a valid domain and extension (e.g. example@domain.com)';
                         }
                         return null;
                       },
@@ -155,7 +154,8 @@ class RegisterPageState extends State<RegisterPage> {
                                   email: emailController.text,
                                   name: nameController.text,
                                   phone: phoneController.text);
-                              Navigator.pushNamed(context, ChatPage.id);
+                              Navigator.pushNamed(context, MainPage.id,
+                                  arguments: emailController.text);
                             },
                           );
                         }

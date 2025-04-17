@@ -4,11 +4,33 @@ import 'package:chat/models/messege.dart';
 import 'package:chat/widgets/chat_bubble.dart';
 import 'package:chat/widgets/chat_bubble_friend.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
   static String id = "chatPage";
+
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
+  final TextEditingController messageController = TextEditingController();
+  final ScrollController controller = ScrollController();
+  final FocusNode focusNode = FocusNode();
+  bool showEmojiPicker = false;
+  @override
+  void initState() {
+    super.initState();
+    focusNode.addListener(() {
+      if (focusNode.hasFocus && showEmojiPicker) {
+        setState(() {
+          showEmojiPicker = false;
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +57,6 @@ class ChatPage extends StatelessWidget {
         .collection('messages')
         .doc(getChatId(args['from'], args['to']))
         .collection('messages');
-    final TextEditingController messageController = TextEditingController();
-    final ScrollController controller = ScrollController();
 
     Future<void> sendMessage(String text) async {
       if (text.trim().isEmpty) return;
@@ -58,6 +78,7 @@ class ChatPage extends StatelessWidget {
         }
       }
       messageController.clear();
+      setState(() => showEmojiPicker = false);
     }
 
     return StreamBuilder<QuerySnapshot>(
@@ -100,6 +121,7 @@ class ChatPage extends StatelessWidget {
         return Scaffold(
           backgroundColor: const Color.fromARGB(255, 255, 235, 242),
           appBar: AppBar(
+            foregroundColor: Colors.white,
             backgroundColor: kPrimaryColor,
             title: Row(
               children: [
@@ -135,26 +157,64 @@ class ChatPage extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                  controller: messageController,
-                  onSubmitted: (value) => sendMessage(value),
-                  decoration: InputDecoration(
-                    hintText: 'Send Message',
-                    suffixIcon: IconButton(
-                      onPressed: () => sendMessage(messageController.text),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        focusNode: focusNode,
+                        controller: messageController,
+                        onSubmitted: (value) => sendMessage(value),
+                        decoration: InputDecoration(
+                          hintText: 'Send Message',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: kPrimaryColor),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.emoji_emotions),
+                      onPressed: () {
+                        FocusScope.of(context).unfocus();
+                        setState(() {
+                          showEmojiPicker = !showEmojiPicker;
+                        });
+                      },
+                    ),
+                    IconButton(
                       icon: const Icon(Icons.send),
                       color: kPrimaryColor,
+                      onPressed: () => sendMessage(messageController.text),
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: kPrimaryColor),
+                  ],
+                ),
+              ),
+              if (showEmojiPicker)
+                SizedBox(
+                  height: 250,
+                  child: EmojiPicker(
+                    onEmojiSelected: (category, emoji) {
+                      messageController.text += emoji.emoji;
+                      messageController.selection = TextSelection.fromPosition(
+                        TextPosition(offset: messageController.text.length),
+                      );
+                    },
+                    config: const Config(
+                      height: 250,
+                      checkPlatformCompatibility: true,
+                      viewOrderConfig: ViewOrderConfig(),
+                      skinToneConfig: SkinToneConfig(),
+                      categoryViewConfig: CategoryViewConfig(),
+                      bottomActionBarConfig: BottomActionBarConfig(),
+                      searchViewConfig: SearchViewConfig(),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         );

@@ -1,7 +1,5 @@
 import 'package:chat/constants.dart';
 import 'package:chat/cubits/cubit.dart';
-import 'package:chat/helper/pick_image.dart';
-// import 'package:chat/helper/show_dialog.dart';
 import 'package:chat/models/user.dart';
 import 'package:chat/pages/login.dart';
 import 'package:chat/widgets/custom_appbar.dart';
@@ -25,89 +23,27 @@ class _ProfilePageState extends State<ProfilePage> {
       body: BlocBuilder<RegisterCubit, RegisterState>(
         builder: (context, state) {
           final user = BlocProvider.of<RegisterCubit>(context).user;
+          final userName = user.name;
           return Padding(
             padding: const EdgeInsets.only(top: 50.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SizedBox(
-                  height: 100,
-                  width: 100,
+                  height: 85,
+                  width: 85,
                   child: Stack(
                     children: [
                       CircleAvatar(
                         radius: 50,
-                        backgroundImage: user.image.isNotEmpty
-                            ? NetworkImage(user.image)
-                            : AssetImage('assets/images/profile.png')
-                                as ImageProvider,
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: IconButton(
-                            icon: Icon(Icons.camera_alt, color: kPrimaryColor),
-                            onPressed: () async {
-                              try {
-                                final newImageUrl =
-                                    await pickAndUploadImage(user.email);
-
-                                if (newImageUrl != null) {
-                                  // print('Image uploaded URL: $newImageUrl');
-
-                                  // Update Firestore with the new image URL
-                                  final userCollection = FirebaseFirestore
-                                      .instance
-                                      .collection('users');
-                                  final querySnapshot = await userCollection
-                                      .where('email', isEqualTo: user.email)
-                                      .get();
-
-                                  if (querySnapshot.docs.isNotEmpty) {
-                                    final docId = querySnapshot.docs.first.id;
-                                    await userCollection
-                                        .doc(docId)
-                                        .update({'image': newImageUrl});
-                                    // print(
-                                    //     'Updated Firestore with image URL: $newImageUrl');
-
-                                    // Update Cubit
-                                    if (context.mounted) {
-                                      BlocProvider.of<RegisterCubit>(context)
-                                          .user = UserData(
-                                        email: user.email,
-                                        name: user.name,
-                                        phone: user.phone,
-                                        image: newImageUrl,
-                                      );
-
-                                      // print(
-                                      //     'Updated Cubit with image URL: ${BlocProvider.of<RegisterCubit>(context).user.image}');
-
-                                      setState(() {});
-
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content:
-                                                Text('Profile image updated!')),
-                                      );
-                                    }
-                                  }
-                                } else {
-                                  // print('No image selected or upload failed.');
-                                }
-                              } catch (e) {
-                                // print('Error updating image: $e');
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content:
-                                            Text('Error updating image: $e')),
-                                  );
-                                }
-                              }
-                            }),
+                        backgroundColor: kPrimaryColor,
+                        child: Text(
+                          userName[0].toString().toUpperCase(),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500),
+                        ),
                       ),
                     ],
                   ),
@@ -116,7 +52,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(user.name),
+                    Text(userName),
                     IconButton(
                       onPressed: () {
                         final newNameController = TextEditingController();
@@ -372,16 +308,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                         RegExp(r'^[a-zA-Z0-9]+@[a-zA-Z]+\.[a-zA-Z]+')
                                             .hasMatch(newEmail)) {
                                       try {
-                                        // Get current user from FirebaseAuth
                                         final currentUser =
                                             FirebaseAuth.instance.currentUser;
 
                                         if (currentUser != null) {
-                                          // Update email in FirebaseAuth
                                           await currentUser
                                               .updateEmail(newEmail);
 
-                                          // Update email in Firestore
                                           final userCollection =
                                               FirebaseFirestore.instance
                                                   .collection('users');
@@ -399,7 +332,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                                 .doc(docId)
                                                 .update({'email': newEmail});
                                             if (context.mounted) {
-                                              // Update email in RegisterCubit
                                               BlocProvider.of<RegisterCubit>(
                                                           context)
                                                       .user =
@@ -473,9 +405,39 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: ElevatedButton.styleFrom(
                         backgroundColor: kPrimaryColor),
                     onPressed: () {
-                      Navigator.of(context).pushNamed(LoginPage.id);
-                      BlocProvider.of<RegisterCubit>(context).user =
-                          UserData(name: '', email: '', phone: '');
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            content: Text('Are you sure to log out ?'),
+                            actions: [
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: const Color.fromARGB(255, 160, 24, 14)
+                                ),
+                                  onPressed: () {
+                                    Navigator.of(context)
+                                        .pushNamed(LoginPage.id);
+                                    BlocProvider.of<RegisterCubit>(context)
+                                            .user =
+                                        UserData(
+                                            name: '', email: '', phone: '');
+                                  },
+                                  child: Text('ok',style: TextStyle(
+                                    color: Colors.white
+                                  ))),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.grey
+                                ),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: Text('cancel',style: TextStyle(
+                                    color: Colors.white
+                                  ),))
+                            ],
+                          );
+                        },
+                      );
                     },
                     child: SizedBox(
                       width: 75,

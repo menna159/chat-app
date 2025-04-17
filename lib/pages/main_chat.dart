@@ -73,10 +73,9 @@ class _MainChatPageState extends State<MainChatPage> {
         ),
       );
     }
-
+     
     final List<QueryDocumentSnapshot> displayUsers =
         filteredUsers.where((user) => user['email'] != email).toList();
-
     return Scaffold(
       appBar: buildAppBar(),
       body: Column(
@@ -98,7 +97,7 @@ class _MainChatPageState extends State<MainChatPage> {
             ),
           ),
           Expanded(
-            child: displayUsers.isEmpty
+            child: displayUsers.isEmpty||displayUsers.length==0
                 ? const Center(
                     child: Text('No users found.'),
                   )
@@ -112,7 +111,6 @@ class _MainChatPageState extends State<MainChatPage> {
                       final userName = user['name'];
                       final id = user.id;
                       final userPhone = user['phone'];
-                      final userImage = user['image'];
                       return ListTile(
                         onTap: () {
                           Navigator.pushNamed(
@@ -129,9 +127,12 @@ class _MainChatPageState extends State<MainChatPage> {
                         },
                         leading: CircleAvatar(
                           radius: 50,
-                          backgroundImage:
-                              AssetImage('assets/images/profile.png')
-                                  as ImageProvider,
+                          backgroundColor: kPrimaryColor,
+                          child: Text(
+                            userName[0].toString().toUpperCase(),
+                            style: TextStyle(
+                              color: Colors.white
+                            ),),
                         ),
                         title: Text(userName),
                       );

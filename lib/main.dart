@@ -6,6 +6,7 @@ import 'package:chat/pages/main_page.dart';
 import 'package:chat/pages/profile.dart';
 import 'package:chat/pages/register.dart';
 import 'package:chat/cubits/cubit.dart'; // Import your cubit
+import 'package:chat/pages/splach_screen.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -34,9 +35,10 @@ class ChatApp extends StatelessWidget {
           ChatPage.id: (context) => ChatPage(),
           MainChatPage.id: (context) => MainChatPage(),
           MainPage.id: (context) => MainPage(),
-          ProfilePage.id: (context) => ProfilePage()
+          ProfilePage.id: (context) => ProfilePage(),
+          SplachScreen.id:(context)=>SplachScreen()
         },
-        initialRoute: LoginPage.id, // Set the initial route
+        initialRoute: SplachScreen.id, // Set the initial route
       ),
     );
   }
